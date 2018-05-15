@@ -16,3 +16,6 @@ def create_app(config_name):
     from .auth import auth_blueprint  # include the views, in form of blueprints
     app.register_blueprint(auth_blueprint)
     return app
+
+
+from app.models import models
