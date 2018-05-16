@@ -100,7 +100,18 @@ class Order(db.Model):
         self.preferred_software = preferred_software
         self.description = description
 
+    def toggle_status(self):
+        if not self.done:
+            self.done = True
+        else:
+            self.done = False
+
     def save(self):
         """Save an order to the database"""
         db.session.add(self)
+        db.session.commit()
+
+    def delete(self):
+        """Delete an order from database"""
+        db.session.delete(self)
         db.session.commit()
