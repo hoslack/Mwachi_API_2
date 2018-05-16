@@ -52,12 +52,56 @@ class OrdersView(MethodView):
             for order in orders:
                 order_data.append({'id': order.id, 'name': order.name, 'email': order.email,
                                    'phone_number': order.phone_number, 'problem_statement': order.problem_statement,
-                                   'leading_channel': order.leading_channel, 'project_type':order.project_type,
-                                   'preferred_software': order.preferred_software, 'description':order.description})
+                                   'leading_channel': order.leading_channel, 'project_type': order.project_type,
+                                   'preferred_software': order.preferred_software, 'description': order.description,
+                                   'done': order.done})
             return jsonify({'data': order_data}), 200
         except Exception as e:
             return self.error.internal_server_error('Error occurred'.format(e))
 
 
+class OrderView(MethodView):
+    """This is for handling order requests"""
+    def __init__(self):
+        super().__init__()
+        self.success = Success()
+        self.error = Error()
+        self.helpers = Helpers()
+
+    def delete(self, order_id):
+        """This is a method to delete a single order from the database"""
+        if not order_id:
+            return self.error.bad_request('Please provide the order ID')
+        if not isinstance(order_id, int):
+            return self.error.bad_request('Invalid order ID')
+        order = Order.query.filter_by(id=order_id).first()
+        try:
+            if not order:
+                return self.error.not_found('Order does not exist')
+            order.delete()
+            return self.success.complete_request('Success')
+        except Exception as e:
+            return self.error.internal_server_error('Error occurred {}'.format(e))
+
+    def put(self, order_id):
+        """This is a method to toggle a single order in the database"""
+        if not order_id:
+            return self.error.bad_request('Please provide the order ID')
+        if not isinstance(order_id, int):
+            return self.error.bad_request('Invalid order ID')
+        order = Order.query.filter_by(id=order_id).first()
+        try:
+            if not order:
+                return self.error.not_found('Order does not exist')
+            order.toggle_status()
+            order.save()
+            return self.success.complete_request('Success')
+        except Exception as e:
+            return self.error.internal_server_error('Error occurred {}'.format(e))
+
+
 orders_view = OrdersView.as_view('orders_view')
+order_view = OrderView.as_view('order_view')
 orders_blueprint.add_url_rule('/orders/', view_func=orders_view, methods=['GET', 'POST'])
+orders_blueprint.add_url_rule('/orders/<int:order_id>/', view_func=order_view, methods=['DELETE', 'PUT'])
+
